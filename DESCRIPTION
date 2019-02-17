@@ -1,0 +1,27 @@
+Package: ReducedHeat
+Title: Produces heatmap from a 1d dimensional reduction
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Miles",
+           family = "Smith",
+           role = c("aut", "cre"),
+           email = "miles-smith@omrf.org")
+Description: Inspired by (and borrowing code from) \link[=https://github.com/KlugerLab/t-SNE-Heatmaps]{t-SNE-Heatmaps} from the Kluger Lab, this allows one to examine gene expression patterns along a 1d projection of a reduced dimension (i.e. tSNE, UMAP, etc...)
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.1.1
+Imports: 
+    heatmaply,
+    gplots,
+    pdist,
+    RColorBrewer,
+    Matrix,
+    Matrix.utils,
+    magrittr,
+    Hmisc,
+    furrr,
+    grDevices
+Remotes:
+    github::satijalab/Seurat@release/3.0
