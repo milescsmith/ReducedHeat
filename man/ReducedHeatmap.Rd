@@ -2,10 +2,17 @@
 % Please edit documentation in R/ReducedHeatmap.R
 \name{ReducedHeatmap}
 \alias{ReducedHeatmap}
+\alias{ReducedHeatmap.default}
 \alias{ReducedHeatmap.Seurat}
-\title{Compute Heatmap using dimensional reduction}
+\title{ReducedHeat}
 \usage{
 ReducedHeatmap(object, ...)
+
+\method{ReducedHeatmap}{default}(expression_matrix, genes_of_interest,
+  dim_embedding, cell_labels, enrich = 0, breaks = 100, slope = 50,
+  intercept = 0.05, dendrogram = "row", titleX = FALSE,
+  RowV = TRUE, show_legend = FALSE, hide_colorbar = FALSE,
+  fontsize_row = 7, margins = c(70, 50, NA, 0), ...)
 
 \method{ReducedHeatmap}{Seurat}(object, assay = "RNA", slot = "data",
   genes_of_interest = NULL, ident = NULL, reduction = "tsne",
@@ -14,21 +21,11 @@ ReducedHeatmap(object, ...)
 \arguments{
 \item{object}{Object to visualize}
 
-\item{...}{Additional parameters to pass}
-
-\item{assay}{Assay to use. Default: "RNA"}
-
-\item{slot}{Slot to use. Default: "data"}
-
-\item{genes_of_interest}{genes_of_interest Genes of Interest}
-
-\item{ident}{Object variable to use when determining cell_labels}
-
-\item{reduction}{Reduction to visualize. Default: 'tsne'}
-
-\item{dimension}{The dimension to visualize. Default: 1}
+\item{...}{Additional parameters to pass to heatmaply}
 
 \item{expression_matrix}{Full expression matrix genes (rows) vs. cells (columns). Rownames should be gene names}
+
+\item{genes_of_interest}{genes_of_interest Genes of Interest}
 
 \item{dim_embedding}{Cell embedding within the dimension of interest}
 
@@ -42,8 +39,33 @@ ReducedHeatmap(object, ...)
 
 \item{intercept}{For better visualization, transform the values with a logistic function. This is the intercept of that function.}
 
-\item{object}{}
+\item{dendrogram}{See heatmaply help. Default: "row"}
+
+\item{titleX}{See heatmaply help. Default: FALSE.}
+
+\item{RowV}{See heatmaply help. Default: TRUE}
+
+\item{show_legend}{See heatmaply help. Default: FALSE}
+
+\item{hide_colorbar}{See heatmaply help. Default: FALSE}
+
+\item{fontsize_row}{See heatmaply help. Default: 7}
+
+\item{margins}{See heatmaply help. Default: c(70, 50, NA, 0)}
+
+\item{assay}{Assay to use. Default: "RNA"}
+
+\item{slot}{Slot to use. Default: "data"}
+
+\item{ident}{Object variable to use when determining cell_labels}
+
+\item{reduction}{Reduction to visualize. Default: 'tsne'}
+
+\item{dimension}{The dimension to visualize. Default: 1}
+
+\item{expression_matrix}{A gene by cell matrix of expression values.
+If passing an object, this is retrieved from that.}
 }
 \description{
-Experimental version of t-SNE heatmaps codes
+Compute Heatmap using dimensional reduction
 }
