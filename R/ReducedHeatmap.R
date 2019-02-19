@@ -201,4 +201,59 @@ ReducedHeatmap.Seurat <- function(object,
                  dim_embedding = dim_embed,
                  cell_labels = ident,
                  ...)
+}
+
+#' @rdname ReducedHeatmap
+#' @method ReducedHeatmap SingleCellExperiment
+#' @importFrom SingleCellExperiment reducedDim reducedDimNames
+#' @importFrom SummarizedExperiment colData assay
+#' @return
+#' @export
+ReducedHeatmap.SingleCellExperiment <- function(object,
+                                  assay = "logcounts",
+                                  genes_of_interest = NULL,
+                                  ident = NULL,
+                                  reduction = 'tsne',
+                                  dimension = 1,
+                                  ...){
+  if (is.null(ident)){
+    if ("ident" %in% names(colData(object))){
+      ident <- colData(object)[["ident"]]
+    } else if ("cluster" %in% names(colData(object))){
+      ident <- colData(object)[["cluster"]]
+    } else {
+      # Since SingleCellExperiment objects do not have a default
+      # cluster identity, guess at one by taking the first column
+      # containing factor variables
+      ident_tbl <- colData(object) %>%
+        as.data.frame %>%
+        select_if(is.factor)
+      # of course, there may be no such columns...
+      if(ncol(ident_tbl) > 0){
+        ident <- ident_tbl[,1]
+      } else {
+            stop("No identity variable given and unable to guess a identity variable.
+                 Please provide one.")
+          }
+    }
+  } else {
+    ident <- colData(object)[[ident]]
+    names(ident) <- rownames(colData(object))
   }
+  if (is.null(genes_of_interest)){
+    stop("You must provide a set of genes to map.")
+  }
+
+  exprs <- assay(x = object, i = assay)
+
+  if(toupper(reduction) %nin% reducedDimNames(object)){
+    stop(glue("{reduction} has not been performed on this object."))
+  }
+  dim_embed <- reducedDim(x = object,
+                          type = toupper(reduction))[,dimension]
+  ReducedHeatmap.default(expression_matrix = exprs,
+                         genes_of_interest = genes_of_interest,
+                         dim_embedding = dim_embed,
+                         cell_labels = ident,
+                         ...)
+}

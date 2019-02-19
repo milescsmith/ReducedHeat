@@ -4,6 +4,7 @@
 \alias{ReducedHeatmap}
 \alias{ReducedHeatmap.default}
 \alias{ReducedHeatmap.Seurat}
+\alias{ReducedHeatmap.SingleCellExperiment}
 \title{ReducedHeat}
 \usage{
 ReducedHeatmap(object, ...)
@@ -17,6 +18,10 @@ ReducedHeatmap(object, ...)
 \method{ReducedHeatmap}{Seurat}(object, assay = "RNA", slot = "data",
   genes_of_interest = NULL, ident = NULL, reduction = "tsne",
   dimension = 1, ...)
+
+\method{ReducedHeatmap}{SingleCellExperiment}(object,
+  assay = "logcounts", genes_of_interest = NULL, ident = NULL,
+  reduction = "tsne", dimension = 1, ...)
 }
 \arguments{
 \item{object}{Object to visualize}

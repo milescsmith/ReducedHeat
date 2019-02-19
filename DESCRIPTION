@@ -23,6 +23,7 @@ Imports:
     Hmisc,
     furrr,
     purrr,
-    grDevices
+    grDevices,
+    SingleCellExperiment
 Remotes:
     github::satijalab/Seurat@release/3.0
