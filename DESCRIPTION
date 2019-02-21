@@ -14,7 +14,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
 Imports: 
     heatmaply,
-    gplots,
     pdist,
     RColorBrewer,
     Matrix,
@@ -24,6 +23,8 @@ Imports:
     furrr,
     purrr,
     grDevices,
-    SingleCellExperiment
+    SingleCellExperiment,
+    Seurat
 Remotes:
     github::satijalab/Seurat@release/3.0
+    bioc::3.7/SingleCellExperiment
