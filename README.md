@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/milescsmith/ReducedHeat.svg?branch=master)](https://travis-ci.com/milescsmith/ReducedHeat)
 # ReducedHeat
 Display gene expression along a given reduced dimension on a heatmap
 
