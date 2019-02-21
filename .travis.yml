@@ -1,0 +1,39 @@
+language: r
+r:
+  - release
+cache: packages
+
+dist: xenial
+
+sudo: required
+
+addons:
+  apt:
+    packages:
+      - libgit2-dev
+      - libhdf5-dev
+      - libtool
+  homebrew:
+    packages:
+      - cmake
+      - gcc
+
+r_packages:
+  - heatmaply
+  - pdist
+  - magrittr
+  - Hmisc
+  - furrr
+  - tidyverse
+  - grDevices
+  - Matrix
+  - Matrix.utils
+  - RColorBrewer
+  
+bioc_packages:
+  - SingleCellExperiment
+  - S4Vectors
+  - SummarizedExperiment
+
+Remotes: 
+    satijalab/Seurat@release/3.0
