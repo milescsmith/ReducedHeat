@@ -24,6 +24,7 @@ Imports:
     purrr,
     grDevices,
     SingleCellExperiment,
+    SummarizedExperiment,
     Seurat
 Remotes:
     github::satijalab/Seurat@release/3.0,
