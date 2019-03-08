@@ -1,7 +1,7 @@
 #' @title ReducedHeat
 #' @description Compute Heatmap using dimensional reduction
 #'
-#' @param expression_matrix Full expression matrix genes (rows) vs. cells (columns). Rownames should be gene names
+#' @param object Object or expression matrix to visualize. Rownames should be gene names
 #' @param genes_of_interest genes_of_interest Genes of Interest
 #' @param dim_embedding Cell embedding within the dimension of interest
 #' @param cell_labels Labels for each cell. While this is generally the cluster identity for a cell, it can be any discrete metadata variable
@@ -10,14 +10,11 @@
 #' @param slope For better visualization, transform the values with a logistic function. This is the slope of that function.
 #' @param intercept For better visualization, transform the values with a logistic function. This is the intercept of that function.
 #'
-#' @param object Object to visualize
 #' @param assay Assay to use. Default: "RNA"
 #' @param slot Slot to use. Default: "data"
 #' @param ident Object variable to use when determining cell_labels
 #' @param reduction Reduction to visualize. Default: 'tsne'
 #' @param dimension The dimension to visualize. Default: 1
-#' @param expression_matrix A gene by cell matrix of expression values.
-#' If passing an object, this is retrieved from that.
 #' @param dendrogram See heatmaply help. Default: "row"
 #' @param titleX See heatmaply help. Default: FALSE.
 #' @param RowV See heatmaply help. Default: TRUE
@@ -26,6 +23,17 @@
 #' @param fontsize_row See heatmaply help. Default: 7
 #' @param margins See heatmaply help. Default: c(70, 50, NA, 0)
 #' @param ... Additional parameters to pass to heatmaply
+#'
+#' @importFrom Matrix colSums rowSums t
+#' @importFrom Hmisc %nin%
+#' @importFrom furrr future_map
+#' @importFrom purrr is_empty
+#' @importFrom heatmaply heatmaply
+#' @importFrom pdist pdist
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom grDevices colorRampPalette
+#' @importFrom Matrix.utils aggregate.Matrix
+#' @importFrom glue glue
 #'
 #' @return
 #' @export
@@ -37,19 +45,11 @@ ReducedHeatmap <- function(object, ...){
 
 #' @rdname ReducedHeatmap
 #' @method ReducedHeatmap default
-#' @importFrom Matrix colSums rowSums t
-#' @importFrom Hmisc %nin%
-#' @importFrom furrr future_map
-#' @importFrom purrr is_empty
-#' @importFrom heatmaply heatmaply
-#' @importFrom pdist pdist
-#' @importFrom RColorBrewer brewer.pal
-#' @importFrom grDevices colorRampPalette
-#' @importFrom Matrix.utils aggregate.Matrix
+#' @importFrom methods as
 #'
 #' @return
 #' @export
-ReducedHeatmap.default <- function(expression_matrix,
+ReducedHeatmap.default <- function(object,
                            genes_of_interest,
                            dim_embedding,
                            cell_labels,
@@ -65,24 +65,24 @@ ReducedHeatmap.default <- function(expression_matrix,
                            fontsize_row = 7,
                            margins = c(70, 50, NA, 0),
                            ...) {
-  if (class(expression_matrix) != "dgCMatrix") {
-    expression_matrix <- as(expression_matrix, "dgCMatrix")
+  if (class(object) != "dgCMatrix") {
+    object <- as(object, "dgCMatrix")
   }
 
-  notinrows <- (genes_of_interest %nin% rownames(expression_matrix))
+  notinrows <- (genes_of_interest %nin% rownames(object))
   if (sum(notinrows) > 0) {
     print(glue("The following rows are not in the matrix: {genes_of_interest[notinrows]}"))
   }
 
   genes_of_interest <- genes_of_interest[!notinrows]
   if (enrich == 0) {
-    expression_matrix <- expression_matrix[genes_of_interest, ]
+    object <- object[genes_of_interest, ]
   }
 
 
   dim_bins <- cut(dim_embedding,
                    breaks = breaks)
-  bin_counts <- aggregate.Matrix(t(expression_matrix), dim_bins)
+  bin_counts <- aggregate.Matrix(t(object), dim_bins)
   empty_bins <- levels(dim_bins)[rowSums(bin_counts) == 0]
 
   if (!is_empty(empty_bins)){
@@ -112,7 +112,7 @@ ReducedHeatmap.default <- function(expression_matrix,
     future_map(.x = 1:length(genes_of_interest),
                .progress = TRUE,
                .f = function(genes_of_interesti){
-      enriched_genes_list[[genes_of_interest[genes_of_interesti]]] <- rownames(expression_matrix)[sortedpdist[genes_of_interesti, 2:(enrich + 1)]]
+      enriched_genes_list[[genes_of_interest[genes_of_interesti]]] <- rownames(object)[sortedpdist[genes_of_interesti, 2:(enrich + 1)]]
     })
     bin_counts_s <- bin_counts_s[, enriched_genes]
   }
@@ -124,7 +124,7 @@ ReducedHeatmap.default <- function(expression_matrix,
                         cut(cluster_reduction$x,
                             breaks = breaks))
 
-  group_labels <- map(cluster_group, function(x) {
+  group_labels <- future_map(cluster_group, function(x) {
       ux <- unique(x[, 2])
       ux[which.max(tabulate(match(x[, 2], ux)))]
     }) %>%
@@ -196,7 +196,7 @@ ReducedHeatmap.Seurat <- function(object,
   }
   dim_embed <- Embeddings(object = object,
                            reduction = reduction)[,dimension]
-  ReducedHeatmap.default(expression_matrix = exprs,
+  ReducedHeatmap.default(object = exprs,
                  genes_of_interest = genes_of_interest,
                  dim_embedding = dim_embed,
                  cell_labels = ident,
@@ -207,6 +207,7 @@ ReducedHeatmap.Seurat <- function(object,
 #' @method ReducedHeatmap SingleCellExperiment
 #' @importFrom SingleCellExperiment reducedDim reducedDimNames
 #' @importFrom SummarizedExperiment colData assay
+#' @importFrom dplyr select_if
 #' @return
 #' @export
 ReducedHeatmap.SingleCellExperiment <- function(object,
@@ -251,7 +252,7 @@ ReducedHeatmap.SingleCellExperiment <- function(object,
   }
   dim_embed <- reducedDim(x = object,
                           type = toupper(reduction))[,dimension]
-  ReducedHeatmap.default(expression_matrix = exprs,
+  ReducedHeatmap.default(object = exprs,
                          genes_of_interest = genes_of_interest,
                          dim_embedding = dim_embed,
                          cell_labels = ident,

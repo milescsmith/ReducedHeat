@@ -9,8 +9,8 @@
 \usage{
 ReducedHeatmap(object, ...)
 
-\method{ReducedHeatmap}{default}(expression_matrix, genes_of_interest,
-  dim_embedding, cell_labels, enrich = 0, breaks = 100, slope = 50,
+\method{ReducedHeatmap}{default}(object, genes_of_interest, dim_embedding,
+  cell_labels, enrich = 0, breaks = 100, slope = 50,
   intercept = 0.05, dendrogram = "row", titleX = FALSE,
   RowV = TRUE, show_legend = FALSE, hide_colorbar = FALSE,
   fontsize_row = 7, margins = c(70, 50, NA, 0), ...)
@@ -24,11 +24,9 @@ ReducedHeatmap(object, ...)
   reduction = "tsne", dimension = 1, ...)
 }
 \arguments{
-\item{object}{Object to visualize}
+\item{object}{Object or expression matrix to visualize. Rownames should be gene names}
 
 \item{...}{Additional parameters to pass to heatmaply}
-
-\item{expression_matrix}{Full expression matrix genes (rows) vs. cells (columns). Rownames should be gene names}
 
 \item{genes_of_interest}{genes_of_interest Genes of Interest}
 
@@ -67,9 +65,6 @@ ReducedHeatmap(object, ...)
 \item{reduction}{Reduction to visualize. Default: 'tsne'}
 
 \item{dimension}{The dimension to visualize. Default: 1}
-
-\item{expression_matrix}{A gene by cell matrix of expression values.
-If passing an object, this is retrieved from that.}
 }
 \description{
 Compute Heatmap using dimensional reduction

@@ -1,17 +1,20 @@
 Package: ReducedHeat
 Title: Produces heatmap from a 1d dimensional reduction
 Version: 0.0.0.9000
+Author: Miles Smith [aut, cre]
+Maintainer: Miles Smith <miles-smith@omrf.org>
 Authors@R: 
     person(given = "Miles",
            family = "Smith",
            role = c("aut", "cre"),
            email = "miles-smith@omrf.org")
-Description: Inspired by (and borrowing code from) \link[=https://github.com/KlugerLab/t-SNE-Heatmaps]{t-SNE-Heatmaps} from the Kluger Lab, this allows one to examine gene expression patterns along a 1d projection of a reduced dimension (i.e. tSNE, UMAP, etc...)
-License: MIT + file LICENSE
+Description: Inspired by (and borrowing code from) \url{https://github.com/KlugerLab/t-SNE-Heatmaps}{t-SNE-Heatmaps} from the Kluger Lab, this allows one to examine gene expression patterns along a 1d projection of a reduced dimension (i.e. tSNE, UMAP, etc...)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1
+Requires: R (>= 3.5.2)
+url: https://github.com/milescsmith/ReducedHeat
 Imports: 
     heatmaply,
     pdist,
@@ -25,7 +28,11 @@ Imports:
     grDevices,
     SingleCellExperiment,
     SummarizedExperiment,
+    glue,
+    dplyr,
+    methods,
     Seurat
 Remotes:
     github::satijalab/Seurat@release/3.0,
-    bioc::3.7/SingleCellExperiment
+    bioc::3.8/SingleCellExperiment
+License: MIT
