@@ -13,6 +13,7 @@ addons:
       - libgit2-dev
       - libhdf5-dev
       - libtool
+      - texinfo
   homebrew:
     packages:
       - cmake
