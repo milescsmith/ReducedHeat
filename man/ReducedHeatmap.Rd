@@ -9,18 +9,18 @@
 \usage{
 ReducedHeatmap(object, ...)
 
-\method{ReducedHeatmap}{default}(object, genes_of_interest, dim_embedding,
+\method{ReducedHeatmap}{default}(object, features, dim_embedding,
   cell_labels, enrich = 0, breaks = 100, slope = 50,
   intercept = 0.05, dendrogram = "row", titleX = FALSE,
   RowV = TRUE, show_legend = FALSE, hide_colorbar = FALSE,
   fontsize_row = 7, margins = c(70, 50, NA, 0), ...)
 
-\method{ReducedHeatmap}{Seurat}(object, assay = "RNA", slot = "data",
-  genes_of_interest = NULL, ident = NULL, reduction = "tsne",
-  dimension = 1, ...)
+\method{ReducedHeatmap}{Seurat}(object, assay = NULL, slot = "data",
+  features = NULL, ident = NULL, reduction = "tsne", dimension = 1,
+  ...)
 
 \method{ReducedHeatmap}{SingleCellExperiment}(object,
-  assay = "logcounts", genes_of_interest = NULL, ident = NULL,
+  assay = "logcounts", features = NULL, ident = NULL,
   reduction = "tsne", dimension = 1, ...)
 }
 \arguments{
@@ -28,13 +28,13 @@ ReducedHeatmap(object, ...)
 
 \item{...}{Additional parameters to pass to heatmaply}
 
-\item{genes_of_interest}{genes_of_interest Genes of Interest}
+\item{features}{Features to plot}
 
 \item{dim_embedding}{Cell embedding within the dimension of interest}
 
 \item{cell_labels}{Labels for each cell. While this is generally the cluster identity for a cell, it can be any discrete metadata variable}
 
-\item{enrich}{For every gene in genes of interest, find enrich number of genes that are close to that gene in the distance induced by the 1D t-SNE}
+\item{enrich}{For every item in \code{features}, find a number of features equal to \code{enrich} that are close to that feature in the distance induced by the 1D UMAP}
 
 \item{breaks}{Number of bins}
 
@@ -56,13 +56,13 @@ ReducedHeatmap(object, ...)
 
 \item{margins}{See heatmaply help. Default: c(70, 50, NA, 0)}
 
-\item{assay}{Assay to use. Default: "RNA"}
+\item{assay}{Assay to use. Default: the object's current default assay.}
 
 \item{slot}{Slot to use. Default: "data"}
 
 \item{ident}{Object variable to use when determining cell_labels}
 
-\item{reduction}{Reduction to visualize. Default: 'tsne'}
+\item{reduction}{Reduction to visualize. Default: 'umap'}
 
 \item{dimension}{The dimension to visualize. Default: 1}
 }

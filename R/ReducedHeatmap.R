@@ -2,18 +2,17 @@
 #' @description Compute Heatmap using dimensional reduction
 #'
 #' @param object Object or expression matrix to visualize. Rownames should be gene names
-#' @param genes_of_interest genes_of_interest Genes of Interest
+#' @param features Features to plot
 #' @param dim_embedding Cell embedding within the dimension of interest
 #' @param cell_labels Labels for each cell. While this is generally the cluster identity for a cell, it can be any discrete metadata variable
-#' @param enrich For every gene in genes of interest, find enrich number of genes that are close to that gene in the distance induced by the 1D t-SNE
+#' @param enrich For every item in \code{features}, find a number of features equal to \code{enrich} that are close to that feature in the distance induced by the 1D UMAP
 #' @param breaks Number of bins
 #' @param slope For better visualization, transform the values with a logistic function. This is the slope of that function.
 #' @param intercept For better visualization, transform the values with a logistic function. This is the intercept of that function.
-#'
-#' @param assay Assay to use. Default: "RNA"
+#' @param assay Assay to use. Default: the object's current default assay.
 #' @param slot Slot to use. Default: "data"
 #' @param ident Object variable to use when determining cell_labels
-#' @param reduction Reduction to visualize. Default: 'tsne'
+#' @param reduction Reduction to visualize. Default: 'umap'
 #' @param dimension The dimension to visualize. Default: 1
 #' @param dendrogram See heatmaply help. Default: "row"
 #' @param titleX See heatmaply help. Default: FALSE.
@@ -50,7 +49,7 @@ ReducedHeatmap <- function(object, ...){
 #' @return
 #' @export
 ReducedHeatmap.default <- function(object,
-                           genes_of_interest,
+                           features,
                            dim_embedding,
                            cell_labels,
                            enrich = 0,
@@ -69,16 +68,15 @@ ReducedHeatmap.default <- function(object,
     object <- as(object, "dgCMatrix")
   }
 
-  notinrows <- (genes_of_interest %nin% rownames(object))
+  notinrows <- (features %nin% rownames(object))
   if (sum(notinrows) > 0) {
-    print(glue("The following rows are not in the matrix: {genes_of_interest[notinrows]}"))
+    print(glue("The following rows are not in the matrix: {features[notinrows]}"))
   }
 
-  genes_of_interest <- genes_of_interest[!notinrows]
+  features <- features[!notinrows]
   if (enrich == 0) {
-    object <- object[genes_of_interest, ]
+    object <- object[features, ]
   }
-
 
   dim_bins <- cut(dim_embedding,
                    breaks = breaks)
@@ -98,23 +96,24 @@ ReducedHeatmap.default <- function(object,
   bin_counts_s <- t(t(bin_counts) / rowSums(t(bin_counts)))
 
   if (enrich > 0) {
-    enriched_genes_list <- list()
+    enriched_features_list <- list()
     message("Determining enrichment")
     pdisttest <- pdist(t(bin_counts_s),
-                       indices.A = genes_of_interest,
+                       indices.A = features,
                        indices.B = 1:ncol(bin_counts_s))
     sortedpdist <- t(apply(as.matrix(pdisttest), 1, order, decreasing = FALSE))
 
-    enriched_genes <- sortedpdist[, 1:(enrich + 1)] %>%
+    enriched_features <- sortedpdist[, 1:(enrich + 1)] %>%
       t() %>%
       as.vector() %>%
       unique()
-    future_map(.x = 1:length(genes_of_interest),
+    future_map(.x = 1:length(features),
                .progress = TRUE,
-               .f = function(genes_of_interesti){
-      enriched_genes_list[[genes_of_interest[genes_of_interesti]]] <- rownames(object)[sortedpdist[genes_of_interesti, 2:(enrich + 1)]]
-    })
-    bin_counts_s <- bin_counts_s[, enriched_genes]
+               .f = function(featuresi){
+                 enriched_features_list[[features[featuresi]]] <-
+                   rownames(object)[sortedpdist[featuresi, 2:(enrich + 1)]]
+                 })
+    bin_counts_s <- bin_counts_s[, enriched_features]
   }
 
   # assign a label to each column based on which of the cell_labels is the most common
@@ -135,12 +134,12 @@ ReducedHeatmap.default <- function(object,
   group_labels <- group_labels[!is.na(group_labels)]
   group_labels <- data.frame(Group = group_labels)
   if (enrich > 0) {
-    gene_colors <- rep(0, length(enriched_genes))
+    gene_colors <- rep(0, length(enriched_features))
   } else {
     gene_colors <- c()
   }
-  gene_colors[colnames(bin_counts_s) %in% genes_of_interest] <- 1
-  gene_colors <- data.frame(Enriched_genes = gene_colors)
+  gene_colors[colnames(bin_counts_s) %in% features] <- 1
+  gene_colors <- data.frame(enriched_features = gene_colors)
 
   my_palette <- colorRampPalette(c("white", "red"))(n = 1000)
   row_color_palette <- colorRampPalette(c("white", "blue"))
@@ -172,35 +171,44 @@ ReducedHeatmap.default <- function(object,
 #' @return
 #' @export
 ReducedHeatmap.Seurat <- function(object,
-                               assay = "RNA",
+                               assay = NULL,
                                slot = "data",
-                               genes_of_interest = NULL,
+                               features = NULL,
                                ident = NULL,
                                reduction = 'tsne',
                                dimension = 1,
                                ...){
+  
+  assay <- assay %||% DefaultAssay(object)
+  
   if (is.null(ident)){
     ident <- Idents(object)
   } else {
-    ident_df <- FetchData(object, vars = ident)
+    ident_df <- FetchData(object,
+                          vars = ident)
     ident <- ident_df[,1]
     names(ident) <- rownames(ident_df)
   }
-  if (is.null(genes_of_interest)){
-    stop("You must provide a set of genes to map.")
+  if (is.null(features)){
+    stop("You must provide a set of features to map.")
   }
 
-  exprs <- GetAssayData(object = object, assay = assay, slot = slot) %>% as.matrix()
+  exprs <- GetAssayData(object = object,
+                        assay = assay,
+                        slot = slot)
+  
   if(reduction %nin% names(object)){
     stop(glue("{reduction} has not been performed on this object."))
   }
+  
   dim_embed <- Embeddings(object = object,
                            reduction = reduction)[,dimension]
-  ReducedHeatmap.default(object = exprs,
-                 genes_of_interest = genes_of_interest,
-                 dim_embedding = dim_embed,
-                 cell_labels = ident,
-                 ...)
+  ReducedHeatmap.default(
+    object = exprs,
+    features = features,
+    dim_embedding = dim_embed,
+    cell_labels = ident,
+    ...)
 }
 
 #' @rdname ReducedHeatmap
@@ -212,11 +220,12 @@ ReducedHeatmap.Seurat <- function(object,
 #' @export
 ReducedHeatmap.SingleCellExperiment <- function(object,
                                   assay = "logcounts",
-                                  genes_of_interest = NULL,
+                                  features = NULL,
                                   ident = NULL,
                                   reduction = 'tsne',
                                   dimension = 1,
                                   ...){
+  
   if (is.null(ident)){
     if ("ident" %in% names(colData(object))){
       ident <- colData(object)[["ident"]]
@@ -241,7 +250,7 @@ ReducedHeatmap.SingleCellExperiment <- function(object,
     ident <- colData(object)[[ident]]
     names(ident) <- rownames(colData(object))
   }
-  if (is.null(genes_of_interest)){
+  if (is.null(features)){
     stop("You must provide a set of genes to map.")
   }
 
@@ -250,11 +259,15 @@ ReducedHeatmap.SingleCellExperiment <- function(object,
   if(toupper(reduction) %nin% reducedDimNames(object)){
     stop(glue("{reduction} has not been performed on this object."))
   }
-  dim_embed <- reducedDim(x = object,
-                          type = toupper(reduction))[,dimension]
-  ReducedHeatmap.default(object = exprs,
-                         genes_of_interest = genes_of_interest,
-                         dim_embedding = dim_embed,
-                         cell_labels = ident,
-                         ...)
+  
+  dim_embed <- reducedDim(
+    x = object,
+    type = toupper(reduction))[,dimension]
+  
+  ReducedHeatmap.default(
+    object = exprs,
+    features = features,
+    dim_embedding = dim_embed,
+    cell_labels = ident,
+    ...)
 }
