@@ -33,6 +33,5 @@ Imports:
     methods,
     Seurat
 Remotes:
-    github::satijalab/Seurat@release/3.0,
-    bioc::3.8/SingleCellExperiment
+    bioc::release/SingleCellExperiment
 License: MIT
